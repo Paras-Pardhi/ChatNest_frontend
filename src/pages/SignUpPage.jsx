@@ -8,6 +8,7 @@ import toast from "react-hot-toast";
 
 const SignUpPage = () => {
   const [showPassword, setShowPassword] = useState(false);
+  const [errors, setErrors] = useState({})
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
@@ -16,22 +17,77 @@ const SignUpPage = () => {
 
   const { signup, isSigningUp } = useAuth();
 
-  const validateForm = () => {
-    if (!formData.fullName.trim()) return toast.error("Full name is required");
-    if (!formData.email.trim()) return toast.error("Email is required");
-    if (!/\S+@\S+\.\S+/.test(formData.email)) return toast.error("Invalid email format");
-    if (!formData.password) return toast.error("Password is required");
-    if (formData.password.length < 6) return toast.error("Password must be at least 6 characters");
+  
+   const handleOnChange = (e) =>{
+        const { name , value } = e.target
 
-    return true;
-  };
+        setFormData((preve)=>{
+            return{
+                ...preve,
+                [name] : value
+            }
+        })
+        setErrors({})
+    }
+
+
+  // const validateForm = () => {
+  //   if (!formData.fullName.trim()) return toast.error("Full name is required");
+  //   if (!formData.email.trim()) return toast.error("Email is required");
+  //   if (!/\S+@\S+\.\S+/.test(formData.email)) return toast.error("Invalid email format");
+  //   if (!formData.password) return toast.error("Password is required");
+  //   if (formData.password.length < 6) return toast.error("Password must be at least 6 characters");
+
+  //   return true;
+  // };
+
+   const validateConfig = {
+        fullName: [
+            { required: true, message: "Please enter your Name!" },
+            { minLength: 3, message: "Name must contain at least 3 Characters!" }
+        ],
+        email: [
+            { required: true, message: "Please enter your Email!" },
+            { pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/, message: "Please enter a valid email address" }
+        ],
+        password: [
+            { required: true, message: "Please enter your Password!" },
+            { pattern: /^(?=.*[A-Z])(?=.*\d).+$/, message: "Password must be 8+ chars with 1 capital & 1 number" }
+        ]
+    }
+    // console.log("data", data)
+
+    const validatForm = (data) => {
+        let errorObj = {}
+        Object.entries(data).forEach(([key, value]) => {
+            const rules = validateConfig[key]
+            if (!rules) return
+            validateConfig[key].some((rule) => {
+                if (rule.required && !value) {
+                    errorObj[key] = rule.message
+                    return true;
+                }
+                if (rule.minLength && value.length < rule.minLength) {
+                    errorObj[key] = rule.message
+                    return true;
+                }
+                if (rule.pattern && !rule.pattern.test(value)) {
+                    errorObj[key] = rule.message
+                    return true
+                }
+            })
+        })
+        setErrors(errorObj)
+        return errorObj;
+    }
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    const formResult = validatForm(formData)
+    if(Object.keys(formResult).length) return;
+    // const success = validateForm();
 
-    const success = validateForm();
-
-    if (success === true) signup(formData);
+     signup(formData);
   };
 
   return (
@@ -53,57 +109,62 @@ const SignUpPage = () => {
             </div>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="form-control">
+          <form onSubmit={handleSubmit} className="space-y-6" noValidate>
+            <div className="form-control relative">
               <label className="label">
-                <span className="label-text font-medium">Full Name</span>
+                <span className="label-text font-medium">fullName</span>
               </label>
-              <div className="relative">
+              <div className="relative  mt-3 md:mt-0">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <User className="size-5 text-base-content/40" />
                 </div>
                 <input
                   type="text"
                   className={`input input-bordered w-full pl-10`}
+                  name="fullName"
                   placeholder="John Doe"
                   value={formData.fullName}
-                  onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+                  onChange={handleOnChange}
                 />
               </div>
+              <p className="absolute top-2 left-12 text-red-500 text-[14px] leading-none">{errors.fullName}</p>
             </div>
 
-            <div className="form-control">
+            <div className="form-control relative">
               <label className="label">
                 <span className="label-text font-medium">Email</span>
               </label>
-              <div className="relative">
+              <div className="relative  mt-3 md:mt-0">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <Mail className="size-5 text-base-content/40" />
                 </div>
                 <input
                   type="email"
                   className={`input input-bordered w-full pl-10`}
+                  name="email"
                   placeholder="you@example.com"
                   value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                   onChange={handleOnChange}
                 />
               </div>
+              <p className="absolute top-2 left-12 text-red-500 text-[14px] leading-none">{errors.email}</p>
             </div>
 
-            <div className="form-control">
+            <div className="form-control relative">
               <label className="label">
                 <span className="label-text font-medium">Password</span>
               </label>
-              <div className="relative">
+              <div className="relative  mt-3 md:mt-0">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <Lock className="size-5 text-base-content/40" />
                 </div>
                 <input
                   type={showPassword ? "text" : "password"}
                   className={`input input-bordered w-full pl-10`}
+                  name="password"
                   placeholder="••••••••"
                   value={formData.password}
-                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                   onChange={handleOnChange}
                 />
                 <button
                   type="button"
@@ -117,6 +178,7 @@ const SignUpPage = () => {
                   )}
                 </button>
               </div>
+              <p className="absolute top-2 left-20 text-red-500 text-[14px] leading-none">{errors.password}</p>
             </div>
 
             <button type="submit" className="btn btn-primary w-full" disabled={isSigningUp}>

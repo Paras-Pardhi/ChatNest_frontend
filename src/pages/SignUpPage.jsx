@@ -127,7 +127,7 @@ const SignUpPage = () => {
                   onChange={handleOnChange}
                 />
               </div>
-              <p className="absolute top-2 left-12 text-red-500 text-[14px] leading-none">{errors.fullName}</p>
+              <p className="absolute top-2 left-16 text-red-500 text-[14px] leading-none">{errors.fullName}</p>
             </div>
 
             <div className="form-control relative">
